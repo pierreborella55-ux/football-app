@@ -1,4 +1,4 @@
-const CACHE = "football-pwa-v8";
+const CACHE = "football-pwa-v10";
 const FILES = [
   "index.html",
   "style.css",
@@ -13,6 +13,10 @@ self.addEventListener("install", e => {
 });
 
 self.addEventListener("fetch", e => {
+  // Ne pas intercepter les appels API ESPN
+  if (e.request.url.includes("espn.com")) {
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request))
   );
