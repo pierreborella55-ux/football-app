@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#16213e"/>
+  <meta name="description" content="Résultats football en temps réel"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>⚽ Football Results</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <header>
+    <h1>⚽ Football Results</h1>
+    <span id="date-today"></span>
+  </header>
+
+  <nav>
+    <button class="nav-btn active"
+      onclick="showTab('results', this)">
+      📋 Résultats
+    </button>
+    <button class="nav-btn"
+      onclick="showTab('standings', this)">
+      🏆 Classement
+    </button>
+    <button class="nav-btn"
+      onclick="showTab('upcoming', this)">
+      📅 À venir
+    </button>
+  </nav>
+
+  <div class="league-filter">
+    <select id="league-select" onchange="loadData()">
+      <option value="FL1">🇫🇷 Ligue 1</option>
+      <option value="PL">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+      <option value="PD">🇪🇸 La Liga</option>
+      <option value="BL1">🇩🇪 Bundesliga</option>
+      <option value="SA">🇮🇹 Serie A</option>
+      <option value="CL">🌍 Champions League</option>
+    </select>
+  </div>
+
+  <main>
+    <div class="loader" id="loader">⏳ Chargement...</div>
+    <div id="results-tab"   class="tab-content"></div>
+    <div id="standings-tab" class="tab-content hidden"></div>
+    <div id="upcoming-tab"  class="tab-content hidden"></div>
+  </main>
+
+  <footer>
+    <p>Données fournies par football-data.org</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
