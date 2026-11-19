@@ -130,7 +130,7 @@ function renderMatches(events, containerId) {
 
 async function loadStandings(league) {
   const slug = LEAGUES[league].slug;
-  const url = `${API_URL}/${slug}/standings`;
+  const url = `https://site.api.espn.com/apis/v2/sports/soccer/${slug}/standings`;
   try {
     const data = await fetchAPI(url);
     renderStandings(data.standings[0].entries);
