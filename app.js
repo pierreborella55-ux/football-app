@@ -1,4 +1,4 @@
-const API_KEY = "VOTRE_CLE_API";
+const API_KEY = "bddefa94c5444cd78383ec36c161f3aa";
 const API_URL = "https://api.football-data.org/v4";
 
 let currentTab = "results";
