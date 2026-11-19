@@ -1,4 +1,4 @@
-const CACHE = "football-pwa-v2";
+const CACHE = "football-pwa-v3";
 const FILES = [
   "index.html",
   "style.css",
