@@ -133,7 +133,12 @@ async function loadStandings(league) {
   const url = `https://site.api.espn.com/apis/v2/sports/soccer/${slug}/standings`;
   try {
     const data = await fetchAPI(url);
-    renderStandings(data.standings[0].entries);
+    // On cherche les entrées dans la bonne structure
+    const entries = data.standings?.entries
+      || data.children?.[0]?.standings?.entries
+      || data.entries
+      || [];
+    renderStandings(entries);
   } catch (e) {
     showError("standings-tab", e);
   }
