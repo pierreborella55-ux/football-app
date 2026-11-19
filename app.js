@@ -1,5 +1,5 @@
 const API_KEY = "bddefa94c5444cd78383ec36c161f3aa";
-const API_URL = "https://api.football-data.org/v4";
+const API_URL = "https://corsproxy.io/?https://api.football-data.org/v4";
 
 let currentTab = "results";
 
