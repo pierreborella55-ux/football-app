@@ -1,13 +1,5 @@
-const API_URL = "https://www.thesportsdb.com/api/v1/json/3";
-
-const LEAGUES = {
-  "FL1":  { id: "4334", name: "Ligue 1",          season: "2024-2025" },
-  "PL":   { id: "4328", name: "Premier League",    season: "2024-2025" },
-  "PD":   { id: "4335", name: "La Liga",           season: "2024-2025" },
-  "BL1":  { id: "4331", name: "Bundesliga",        season: "2024-2025" },
-  "SA":   { id: "4332", name: "Serie A",           season: "2024-2025" },
-  "CL":   { id: "4480", name: "Champions League",  season: "2024-2025" }
-};
+const API_KEY = "bddefa94c5444cd78383ec36c161f3aa";
+const API_URL = "https://api.football-data.org/v4";
 
 let currentTab = "results";
 
@@ -29,23 +21,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function showTab(tab, btn) {
   currentTab = tab;
-
   document.querySelectorAll(".nav-btn")
     .forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-
   document.querySelectorAll(".tab-content")
     .forEach(el => el.classList.add("hidden"));
   document.getElementById(`${tab}-tab`)
     .classList.remove("hidden");
-
   loadData();
 }
 
 function loadData() {
   const league = document.getElementById("league-select").value;
   showLoader();
-
   if (currentTab === "results")   loadResults(league);
   if (currentTab === "standings") loadStandings(league);
   if (currentTab === "upcoming")  loadUpcoming(league);
@@ -60,92 +48,82 @@ function hideLoader() {
 }
 
 async function loadResults(league) {
-  const leagueId = LEAGUES[league].id;
-  const url = `${API_URL}/eventspastleague.php?id=${leagueId}`;
+  const today = getDateString(0);
+  const url = `${API_URL}/competitions/${league}/matches?dateFrom=${today}&dateTo=${today}`;
   try {
     const data = await fetchAPI(url);
-    renderMatches(data.events, "results-tab");
+    renderMatches(data.matches, "results-tab");
   } catch (e) {
-    showError("results-tab");
+    showError("results-tab", e);
   }
   hideLoader();
 }
 
 async function loadUpcoming(league) {
-  const leagueId = LEAGUES[league].id;
-  const url = `${API_URL}/eventsnextleague.php?id=${leagueId}`;
+  const dateFrom = getDateString(1);
+  const dateTo   = getDateString(7);
+  const url = `${API_URL}/competitions/${league}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}&status=SCHEDULED`;
   try {
     const data = await fetchAPI(url);
-    renderMatches(data.events, "upcoming-tab");
+    renderMatches(data.matches, "upcoming-tab");
   } catch (e) {
-    showError("upcoming-tab");
+    showError("upcoming-tab", e);
   }
   hideLoader();
 }
 
-function renderMatches(events, containerId) {
+function renderMatches(matches, containerId) {
   const container = document.getElementById(containerId);
-
-  if (!events || events.length === 0) {
+  if (!matches || matches.length === 0) {
     container.innerHTML =
       `<p class="empty-msg">😴 Aucun match trouvé</p>`;
     return;
   }
-
-  container.innerHTML = events.map(event => {
-    const homeScore = event.intHomeScore ?? "–";
-    const awayScore = event.intAwayScore ?? "–";
-    const isPlayed  = event.intHomeScore !== null;
-    const time      = event.strTime
-                        ? event.strTime.substring(0, 5)
-                        : "--:--";
-    const date      = event.dateEvent ?? "";
-
-    const scoreDisplay = isPlayed
-      ? `${homeScore} - ${awayScore}`
-      : time;
-
-    const status = isPlayed ? "FINISHED" : "SCHEDULED";
-
+  container.innerHTML = matches.map(match => {
+    const homeScore = match.score?.fullTime?.home ?? "–";
+    const awayScore = match.score?.fullTime?.away ?? "–";
+    const status    = match.status;
+    const time      = new Date(match.utcDate)
+                        .toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        });
+    const scoreDisplay =
+      status === "SCHEDULED" || status === "TIMED"
+        ? time
+        : `${homeScore} - ${awayScore}`;
     return `
       <div class="match-card">
         <div class="match-teams">
-          <span class="team-name">${event.strHomeTeam}</span>
+          <span class="team-name">${match.homeTeam.name}</span>
           <span class="match-score">${scoreDisplay}</span>
-          <span class="team-name">${event.strAwayTeam}</span>
+          <span class="team-name">${match.awayTeam.name}</span>
         </div>
         <div class="match-info">
-          <span>🏆 ${event.strLeague}</span>
+          <span>🏆 ${match.competition?.name ?? ""}</span>
           <span class="status-badge status-${status}">
             ${formatStatus(status)}
           </span>
-          <span>📅 ${date}</span>
+          <span>🕐 ${time}</span>
         </div>
       </div>`;
   }).join("");
 }
 
 async function loadStandings(league) {
-  const leagueData = LEAGUES[league];
-  const url = `${API_URL}/lookuptable.php?l=${leagueData.id}&s=${leagueData.season}`;
+  const url = `${API_URL}/competitions/${league}/standings`;
   try {
     const data = await fetchAPI(url);
-    renderStandings(data.table);
+    const table = data.standings[0].table;
+    renderStandings(table);
   } catch (e) {
-    showError("standings-tab");
+    showError("standings-tab", e);
   }
   hideLoader();
 }
 
 function renderStandings(table) {
   const container = document.getElementById("standings-tab");
-
-  if (!table || table.length === 0) {
-    container.innerHTML =
-      `<p class="empty-msg">😴 Classement non disponible</p>`;
-    return;
-  }
-
   container.innerHTML = `
     <div class="standings-wrapper">
       <table class="standings-table">
@@ -163,13 +141,13 @@ function renderStandings(table) {
         <tbody>
           ${table.map(row => `
             <tr>
-              <td>${row.intRank}</td>
-              <td>${row.strTeam}</td>
-              <td>${row.intPlayed}</td>
-              <td>${row.intWin}</td>
-              <td>${row.intDraw}</td>
-              <td>${row.intLoss}</td>
-              <td>${row.intPoints}</td>
+              <td>${row.position}</td>
+              <td>${row.team.shortName ?? row.team.name}</td>
+              <td>${row.playedGames}</td>
+              <td>${row.won}</td>
+              <td>${row.draw}</td>
+              <td>${row.lost}</td>
+              <td>${row.points}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -178,9 +156,20 @@ function renderStandings(table) {
 }
 
 async function fetchAPI(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      "X-Auth-Token": API_KEY,
+      "Content-Type": "application/json"
+    }
+  });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.json();
+}
+
+function getDateString(addDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + addDays);
+  return d.toISOString().split("T")[0];
 }
 
 function formatStatus(status) {
@@ -189,16 +178,16 @@ function formatStatus(status) {
     IN_PLAY:   "🔴 En direct",
     PAUSED:    "⏸ Mi-temps",
     SCHEDULED: "📅 Programmé",
+    TIMED:     "📅 Programmé",
     POSTPONED: "⚠️ Reporté",
     CANCELLED: "❌ Annulé",
   };
   return map[status] ?? status;
 }
 
-function showError(containerId) {
+function showError(containerId, e) {
   document.getElementById(containerId).innerHTML =
     `<p class="error-msg">
-      ❌ Erreur de chargement.<br/>
-      Réessayez dans quelques instants.
+      ❌ Erreur : ${e.message}<br/>
     </p>`;
 }
