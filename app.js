@@ -3,7 +3,7 @@ const API_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer";
 const LEAGUES = {
   "FL1": { slug: "fra.1",          name: "Ligue 1" },
   "FL2": { slug: "fra.2",          name: "Ligue 2" },
-  "FL3": { slug: "fra.3",          name: "Ligue 3" },
+  "FL3": { slug: "fra.national",   name: "Ligue 3" },
   "PL":  { slug: "eng.1",          name: "Premier League" },
   "PD":  { slug: "esp.1",          name: "La Liga" },
   "BL1": { slug: "ger.1",          name: "Bundesliga" },
